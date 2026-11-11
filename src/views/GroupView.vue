@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import QRCode from 'qrcode'
 import {
   type Group, type Payment, type Cell, extractPayments, buildLedger, cellFor, periodSummary, periodsUntil,
-  periodLabel, periodKey, encodeTag, fmtNim, lunaToNim, ledgerCsv,
+  periodLabel, periodKey, encodeTag, fmtNim, lunaToNim, ledgerCsv, hexToUtf8,
 } from '../lib/core'
 import { getGroup, updateGroup } from '../lib/api'
 import { transactionsFor, transactionByHash, explorerTx } from '../lib/chain'
@@ -155,18 +155,30 @@ async function confirmPay() {
   }
   try {
     payAmount.value = owedFor(period)
+    const sentAt = Date.now()
     const hash = await nimiq.sendBasicTransactionWithData({
       recipient: g.payee.replace(/\s+/g, ''),
       value: payAmount.value,
       data: encodeTag(g.id, period, me.value!),
     })
-    payHash.value = hash
+    payHash.value = /^[0-9a-f]{64}$/i.test(hash) ? hash : ''
     payState.value = 'pending'
-    // Confirm on-chain instead of trusting the returned hash.
+    // Confirm on-chain instead of trusting the return value: look the tx up by hash, and also
+    // scan the treasurer's latest transactions for our exact tag (covers hosts that return the
+    // serialized transaction instead of its hash).
+    const tag = encodeTag(g.id, period, me.value!)
+    const payee = g.payee.replace(/\s+/g, '')
     for (let i = 0; i < 30; i++) {
       await new Promise((r) => setTimeout(r, 3000))
-      const tx = await transactionByHash(g.network, hash)
+      let tx = payHash.value ? await transactionByHash(g.network, payHash.value) : null
+      if (!tx || !tx.blockNumber) {
+        try {
+          const recent = await transactionsFor(g.network, payee, 500)
+          tx = recent.find((t) => t.timestamp >= sentAt - 120_000 && hexToUtf8(t.recipientData || '') === tag && t.value === payAmount.value) || null
+        } catch { tx = null }
+      }
       if (tx && tx.blockNumber) {
+        payHash.value = tx.hash
         if (tx.executionResult === false) {
           payState.value = 'error'
           payMsg.value = 'The transaction was included but failed on-chain. No dues were recorded.'
@@ -334,7 +346,7 @@ async function saveEdit() {
         </template>
         <template v-else-if="payState === 'pending'">
           <p>Sent. Waiting for the Nimiq blockchain to confirm it (usually a few seconds)…</p>
-          <p class="small">Tx <a :href="explorerTx(group.network, payHash)" target="_blank" rel="noopener"><code>{{ short(payHash) }}</code></a></p>
+          <p v-if="payHash" class="small">Tx <a :href="explorerTx(group.network, payHash)" target="_blank" rel="noopener"><code>{{ short(payHash) }}</code></a></p>
           <p v-if="payMsg" class="hint">{{ payMsg }}</p>
         </template>
         <template v-else-if="payState === 'done'">
