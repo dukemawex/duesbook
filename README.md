@@ -56,6 +56,16 @@ Nimiq Pay WebView ──► DuesBook (Vite + Vue 3 + TS, static on Vercel)
 - The server stores only the group name, member names, the treasurer address, the amount and the schedule. The treasurer's edit token is stored as a SHA-256 hash. The app tells users this before they create a group.
 - The amount, schedule, network and treasurer address can't be changed after creation, so past records stay consistent.
 
+## Tested
+
+- **Unit:** `npm test` runs 16 vitest checks: address checksum against real chain addresses, periods, the tag codec (including a real testnet payload), ledger rules (duplicates, other groups, failed transactions, unknown members, part-payments) and CSV.
+- **End-to-end on Nimiq testnet** (`e2e/`, against the production deployment):
+  - The treasurer creates a group using `listAccounts`.
+  - The member sees their balance (`getBalance`), cancels once and gets a friendly `PERMISSION_DENIED` message, then pays with `sendBasicTransactionWithData`.
+  - The app confirms the payment on-chain in about 5 s, and the treasurer's register flips to **paid**.
+  - Part-payments (1 + 1 of 2 NIM) show as part-paid, then paid. Untagged and other-group transactions are ignored.
+  - The API rejects bad addresses, zero amounts and wrong treasurer tokens, and amounts can't be changed after creation.
+
 ## Run locally
 
 ```bash

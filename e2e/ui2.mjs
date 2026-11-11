@@ -1,0 +1,22 @@
+import { chromium } from 'playwright-core'
+import fs from 'node:fs'
+const BASE = 'https://duesbook-app.vercel.app'
+const { adminToken } = JSON.parse(fs.readFileSync('group.json', 'utf8'))
+const browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] })
+const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, acceptDownloads: true })
+const page = await ctx.newPage()
+const errors = []; page.on('pageerror', (e) => errors.push(String(e)))
+await page.goto(`${BASE}/#/g/bgs2a7sf?admin=${adminToken}`)
+await page.waitForSelector('text=Read from the Nimiq testnet blockchain', { timeout: 30000 })
+const urlAfter = page.url().replace(adminToken, '<token>')
+const statuses = await page.$$eval('button.list-row', (els) => els.map((e) => e.innerText.replace(/\s+/g, ' ').trim()))
+const hasEdit = await page.isVisible('button:has-text("Edit group")')
+const [dl] = await Promise.all([page.waitForEvent('download'), page.click('button:has-text("Export CSV")')])
+const csv = fs.readFileSync(await dl.path(), 'utf8')
+await page.click('button.list-row:has-text("Bayo")')
+const detail = await page.$eval('.detail', (e) => e.innerText.replace(/\s+/g, ' '))
+await page.click('button:has-text("Edit group")')
+await page.waitForSelector('text=Edit group')
+await page.screenshot({ path: '/workspace/nimiq-miniapp/media/06-treasurer-edit.png', fullPage: true })
+console.log(JSON.stringify({ urlAfter, statuses, hasEdit, csvLines: csv.trim().split('\n').length, csvHead: csv.split('\n')[0], detail, errors }, null, 1))
+await browser.close()
