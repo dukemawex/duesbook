@@ -45,6 +45,10 @@ describe('tags', () => {
     expect(new TextEncoder().encode(t).length).toBeLessThanOrEqual(64)
     expect(c.decodeTag(t)).toEqual({ groupId: 'abcd2345', period: '2026-W46', memberId: 300 })
   })
+  it('decodes a real testnet transaction payload', () => {
+    // recipientData of testnet tx c9ded139…d40b sent by the e2e script
+    expect(c.decodeTag(c.hexToUtf8('4442313a62677332613773663a323032362d31313a31'))).toEqual({ groupId: 'bgs2a7sf', period: '2026-11', memberId: 1 })
+  })
   it('ignores other data', () => {
     expect(c.decodeTag('hello')).toBeNull()
     expect(c.hexToUtf8('06c203643f4df673af0db8eea90f6755a28c6f9cf1')).toBe('')

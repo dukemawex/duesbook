@@ -23,6 +23,12 @@ const ngnPerNim = ref<number | null>(null)
 const me = ref<number | undefined>(localGroup(props.id)?.memberId)
 const adminToken = ref<string | undefined>(localGroup(props.id)?.adminToken)
 const justCreated = location.hash.includes('created=1')
+// Treasurer recovery link: #/g/<id>?admin=<token> restores edit rights on a new device.
+const adminFromLink = /[?&]admin=([A-Za-z0-9_-]{20,})/.exec(location.hash)?.[1]
+if (adminFromLink) {
+  adminToken.value = adminFromLink
+  history.replaceState(null, '', `#/g/${props.id}`)
+}
 const selected = ref('')
 const openMember = ref<number | null>(null)
 const copied = ref('')
@@ -71,7 +77,7 @@ async function load() {
     selected.value = periodKey(g.cadence, new Date())
     if (!periodsUntil(g.cadence, g.start, new Date()).includes(selected.value)) selected.value = g.start
     if (me.value != null && !g.members.some((m) => m.id === me.value)) { me.value = undefined; forgetMember(g.id) }
-    rememberGroup(g.id, g.name)
+    rememberGroup(g.id, g.name, adminToken.value ? { adminToken: adminToken.value } : {})
     sync()
   } catch (e) {
     loadErr.value = e instanceof Error ? e.message : String(e)
@@ -261,6 +267,7 @@ async function saveEdit() {
         <button class="btn small" @click="shareInvite">Share invite</button>
         <button class="btn small ghost" @click="copy(shareUrl, 'Link copied')">Copy link</button>
         <button v-if="adminToken" class="btn small ghost" @click="startEdit">Edit group</button>
+        <button v-if="adminToken" class="btn small ghost" @click="copy(`${shareUrl}?admin=${adminToken}`, 'Treasurer link copied. Keep it private.')">Treasurer recovery link</button>
         <span v-if="copied" class="ok small">{{ copied }}</span>
       </div>
     </section>
