@@ -1,0 +1,29 @@
+{
+  "name": "duesbook",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "test": "vitest run",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@nimiq/mini-app-sdk": "^0.2.5",
+    "@upstash/redis": "^1.41.0",
+    "qrcode": "^1.5.4",
+    "vue": "^3.5.44"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/qrcode": "^1.5.6",
+    "@vercel/node": "^30.0.0",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/tsconfig": "^0.9.1",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0",
+    "vue-tsc": "^3.3.14"
+  }
+}
