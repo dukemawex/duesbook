@@ -1,6 +1,6 @@
 # DuesBook: group dues in NIM, with a register that keeps itself
 
-**Live Mini App:** https://duesbook.vercel.app · **Category:** Pay · **License:** MIT
+**Live Mini App:** https://duesbook-app.vercel.app · **Category:** Pay · **License:** MIT
 
 DuesBook is a [Nimiq Pay](https://nimiq.com/nimiq-pay/) Mini App for the treasurer of any group that collects **recurring dues**: estate and residents' associations (security and waste levies), alumni sets, cooperatives, church and mosque groups, age-grade and *ajo/esusu* meetings, and sports clubs.
 
@@ -31,7 +31,7 @@ Outside Nimiq Pay, for example in a desktop browser, the register still works. T
 
 ## For judges: test in 2 minutes
 
-1. In **Nimiq Pay → Mini Apps**, open `https://duesbook.vercel.app`.
+1. In **Nimiq Pay → Mini Apps**, open `https://duesbook-app.vercel.app`.
 2. Tap **+ New group**, then **Use my Nimiq Pay address**. Set a small amount, for example `1` NIM, keep **Monthly**, add 2–3 names (one of them yours) and tap **Create group**.
 3. Tap **Share invite**. This is the link your members would get.
 4. Under **Which member are you?**, tap your name. Your outstanding period appears. Tap **Pay 1 NIM** and approve in Nimiq Pay.

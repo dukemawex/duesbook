@@ -7,7 +7,7 @@ export const RPC: Record<Network, string> = {
 export const explorerTx = (net: Network, hash: string) =>
   net === 'mainnet' ? `https://nimiq.watch/#${hash}` : `https://test.nimiq.watch/#${hash}`
 
-async function rpc<T>(net: Network, method: string, params: unknown[]): Promise<T> {
+async function rpc<T>(net: Network, method: string, params: unknown[] | Record<string, unknown>): Promise<T> {
   const res = await fetch(RPC[net], {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -16,7 +16,7 @@ async function rpc<T>(net: Network, method: string, params: unknown[]): Promise<
   if (res.status === 429) throw new Error('The public Nimiq RPC is rate-limiting us. Wait a few seconds and refresh.')
   if (!res.ok) throw new Error(`Nimiq RPC error (HTTP ${res.status})`)
   const body = await res.json()
-  if (body.error) throw new Error(body.error.message || 'Nimiq RPC error')
+  if (body.error) throw new Error(`Nimiq RPC: ${body.error.message || 'error'}${body.error.data ? ` (${String(body.error.data).slice(0, 120)})` : ''}`)
   return body.result?.data as T
 }
 
@@ -25,8 +25,8 @@ export async function transactionsFor(net: Network, address: string, limit = 200
   const all: ChainTx[] = []
   let startAt: string | undefined
   while (all.length < limit) {
-    const params: unknown[] = [address, 500]
-    if (startAt) params.push(startAt)
+    const params: Record<string, unknown> = { address, max: 500 }
+    if (startAt) params.startAt = startAt
     const page = await rpc<ChainTx[]>(net, 'getTransactionsByAddress', params)
     if (!page || !page.length) break
     all.push(...page)
